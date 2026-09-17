@@ -1,0 +1,116 @@
+Set-Location "C:\Documents\ODU\OEAS805\OEAS805\HW2"
+
+help me fix this in jupyter notebook
+
+The KeyError: "None of [Index(['latitude', 'longitude'], dtype='str')] are in the [columns]" error occurs because your pandas DataFrame (df) does not have columns named exactly 'latitude' and 'longitude'.
+
+Follow these steps to find the exact column names and fix the issue.
+
+1
+Check Available Column Names
+Step 1
+Run the following code in a new notebook cell above your code to inspect the actual column names in your DataFrame:
+
+Python
+print(df.columns.tolist())
+Verification: Ensure you can see a list of all column names printed below the cell.
+
+2
+Update Variable Names
+Step 2
+Look at the output from Step 1 and update lat_name and lon_name in lines 2 and 3 of your cell to match the exact spelling, capitalization, and spacing in your DataFrame (e.g., 'lat', 'Lat', 'LATITUDE', 'Long', 'lon', etc.).
+
+For example:
+
+Python
+lat_name = 'lat'       # Replace 'lat' with your exact column name
+lon_name = 'lon'       # Replace 'lon' with your exact column name
+Verification: Check that the string values match the printed list items character-for-character.
+
+3
+Re-run the Cell
+Step 3
+Execute the cell containing your map code again.
+
+Verification: The KeyError will no longer appear, and map_df will be successfully created.
+
+What do the printed column names look like from print(df.columns.tolist())?
+
+Help me fix this error
+
+The KeyError: "None of [Index(['latitude', 'longitude'], dtype='str')] are in the [columns]" occurs because your DataFrame (df) does not contain columns named exactly 'latitude' and 'longitude'. They might be named lat/lon, capitalized differently (e.g., Latitude), or have hidden trailing spaces.
+
+Here is how to fix it:
+
+Check your actual column names by running this in a new cell:
+
+Python
+print(df.columns.tolist())
+Update lines 2 and 3 in your code to match the exact names printed from Step 1.
+
+For example, if your columns are named 'lat' and 'long':
+
+Python
+lat_name = 'lat'   # Update to match your DataFrame
+lon_name = 'long'  # Update to match your DataFrame
+
+# Clean non-null coordinate data
+map_df = df[[lat_name, lon_name]].dropna()
+
+# Create Map
+plt.figure(figsize=(12, 8))
+If there are extra spaces in column names (e.g., 'latitude '), you can quickly strip them off your entire DataFrame before running your code:
+
+Python
+df.columns = df.columns.str.strip()
+What names were printed when you ran print(df.columns.tolist())?
+
+The NameError: name 'df' is not defined error happens because the variable df is not loaded into your notebook's active memory session yet. This usually occurs when the kernel was restarted or when the cell that creates/reads df hasn't been executed in the current session.
+
+Additionally, looking at the list of columns output in cell [14], your dataset does not contain latitude or longitude columns (the list starts with 'area', 'date', 'cigarette_butts', ...).
+
+Follow these steps to fix the error and verify your coordinate data:
+
+1
+Re-run the Data Loading Cell
+Step 1
+Scroll up in your notebook to the cell where you load your dataset (e.g., df = pd.read_csv(...)) and run it.
+
+Verification: Ensure the cell execution counter next to the loading cell changes to a number (e.g., [1]) with no errors.
+
+2
+Check for Coordinate Columns
+Step 2
+If you intend to plot spatial data with Cartopy, confirm whether your dataset contains latitude and longitude columns by searching the column list:
+
+Python
+[col for col in df.columns if 'lat' in col.lower() or 'lon' in col.lower()]
+Verification: If this prints an empty list [], your loaded dataset does not include coordinate columns. You may need to merge coordinates or load a dataset that includes geographical coordinates.
+
+3
+Run the Visualization Cell
+Step 3
+Once df is defined in memory, re-run cell [1].
+
+Verification: The NameError will be resolved and the Seaborn bar plot showing the top 15 cleanup areas will render without errors.
+
+Did re-running the data loading cell resolve the NameError, or are you also missing the coordinate columns for the Cartopy plot?
+
+what does this mean?
+
+This is a FutureWarning from Seaborn (not a breaking error). Your code still ran and generated the plot, but Seaborn is telling you that passing palette without defining hue is deprecated and will break in future updates (version 0.14.0+).
+
+How to Fix It
+Since your bars are grouped by the y-axis (y='area'), assign hue='area' and set legend=False inside sns.barplot:
+
+Python
+sns.barplot(
+    data=area_summary, 
+    x='total_items_collected', 
+    y='area', 
+    hue='area', 
+    palette='Blues_r', 
+    legend=False
+)
+Why this happens
+In newer versions of Seaborn, color palettes are reserved for grouping variables assigned to hue. By explicitly assigning hue='area' and hiding the unnecessary legend with legend=False, you get the exact same colored bar plot without the red warning box.
