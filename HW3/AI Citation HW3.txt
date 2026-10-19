@@ -1,0 +1,251 @@
+help me solve the error in this code for a jupyter notebook.
+
+The error FileNotFoundError occurs because Python cannot find the file at the specified path ('../data/CBP_TWQM_MAIN_WQ_2021_2026_surface.csv') relative to where your Jupyter Notebook is running.   
+PNG
+
+Step-by-Step Fixes
+Verify your current working directory
+
+Run this in a new cell in your Jupyter notebook to see where Python is looking for files:
+
+Python
+import os
+print(os.getcwd())
+Check relative pathing
+
+../data/... tells Python to go up one directory from your notebook's location, then look inside a folder named data.
+
+If your data folder is in the same directory as your notebook, change the path to:
+
+Python
+df = pd.read_csv('data/CBP_TWQM_MAIN_WQ_2021_2026_surface.csv')
+If the file is directly in the same folder as the notebook without any data folder, use:
+
+Python
+df = pd.read_csv('CBP_TWQM_MAIN_WQ_2021_2026_surface.csv')
+Check for typos or full pathing
+
+Ensure there are no typos in the filename or file extension (e.g., if Windows is hiding file extensions, it might actually be named ...surface.csv.csv).
+
+Alternatively, use the absolute path to guarantee Python finds it (use double backslashes \\ or a raw string r'...' on Windows):
+
+Python
+df = pd.read_csv(r'C:\Users\YourUsername\path\to\data\CBP_TWQM_MAIN_WQ_2021_2026_surface.csv')
+fixing the path to the data gave me another error
+
+The KeyError occurs on line 9 because Python cannot find the column named 'DO' in your DataFrame. Line 5 defines target_col = 'DO', and when line 9 tries to select [target_col], Pandas raises an error because that exact column header doesn't exist in the loaded CSV.   
+PNG
++ 1
+
+Step-by-Step Fixes
+Print the actual column names in your dataset
+
+Run this in a new cell right after loading your CSV to inspect the exact column names:
+
+Python
+print(df.columns.tolist())
+Check for common mismatches
+
+Leading/Trailing Whitespace: The column name might be 'DO ' or ' DO' instead of 'DO'.
+
+Case Sensitivity: Pandas column names are case-sensitive (e.g., 'do' vs 'DO').
+
+Different Header Name: The dissolved oxygen column might be named something like 'Dissolved_Oxygen', 'DO_mgL', or 'DO_val'.
+
+Update target_col or clean column names
+
+Option A: Update line 5 with the exact string returned from step 1:
+
+Python
+target_col = 'EXACT_COLUMN_NAME_FROM_STEP_1'
+Option B: Clean all column whitespace right after reading the CSV to prevent formatting issues:
+
+Python
+df.columns = df.columns.str.strip()
+Once target_col matches an exact column name in df.columns, line 9 will execute without error.   
+PNG
+
+would dissolved oxygen be a good high-level water quality variable to predict as your target for this dataset?
+
+Yes, Dissolved Oxygen (DO) is an exceptional high-level target variable for water quality prediction—especially for this specific dataset.
+
+Here is why DO works so well as a primary target:
+
+1. It is the "Pulse" of an Aquatic Ecosystem
+Dissolved oxygen is arguably the single most critical indicator of overall aquatic ecosystem health. Low DO levels (hypoxia) lead to fish kills, loss of biodiversity, and dead zones. If you can accurately model and predict DO, you are directly modeling the biological viability of the water body.
+
+2. Tailored to Chesapeake Bay Data (CBP_TWQM)
+Looking at your file path (CBP_TWQM_MAIN_WQ_2021_2026_surface.csv), this is Chesapeake Bay Program Tidal Water Quality Monitoring data. Chesapeake Bay has historically suffered from major seasonal hypoxic zones (the "dead zone"). Predicting DO in this specific region is a well-studied, highly impactful environmental science problem.   
+PNG
+
+3. Highly Predictable from Other Physical/Chemical Features
+DO has strong, well-defined physical and biological relationships with other features typically present in water quality datasets, making it a great candidate for machine learning models:
+
+Water Temperature: Cold water holds more oxygen; as temperature rises, DO drops (solubility effect).
+
+Salinity / Conductivity: Higher salinity reduces oxygen solubility.
+
+pH & Chlorophyll-a: Photosynthesis from algae generates DO during the day, while respiration/decomposition depletes it at night.
+
+Turbidity / Secchi Depth: Affects light penetration, impacting photosynthetic oxygen generation.
+
+Key Considerations for Your Model
+Non-linear Relationships: Because DO depends on a mix of chemical solubility, temperature, and biological cycles, tree-based models (like Random Forests or XGBoost) usually perform much better than standard Linear Regression.
+
+Seasonality: Water temperature fluctuates heavily by season, which heavily influences DO. Make sure your train/test splits account for time or seasonal variations if temporal features are included.
+
+If your goal is to showcase an environmental machine learning pipeline with a meaningful, real-world target, DO is a top-tier choice.
+
+help me write code for my jupyter notebook to model Linear Regression (simple or multiple)
+k-Nearest Neighbors (KNN) Regressor (linear or non-linear)
+Multi-Layer Perceptron (MLP) Regressor (linear or non-linear)
+Here is a complete, self-contained pipeline for your notebook to train and evaluate Linear Regression, k-Nearest Neighbors (KNN), and a Multi-Layer Perceptron (MLP) Neural Network.
+
+Because KNN and MLP are distance-based algorithms, feature scaling via StandardScaler is required so that high-magnitude variables don't skew the predictions.
+
+Python
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LinearRegression
+from sklearn.neighbors import KNeighborsRegressor
+from sklearn.neural_network import MLPRegressor
+from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
+
+# -------------------------------------------------------------------
+# 1. Load Data & Prepare Targets/Features
+# -------------------------------------------------------------------
+df = pd.read_csv('../data/CBP_TWQM_MAIN_WQ_2021_2026_surface.csv')
+
+# Clean column whitespace to prevent KeyErrors
+df.columns = df.columns.str.strip()
+
+# Specify target column (e.g., Dissolved Oxygen)
+target_col = 'DO'  # Change to match your exact column name
+
+# Automatically select numerical columns as features (excluding target)
+feature_cols = [c for c in df.select_dtypes(include=[np.number]).columns if c != target_col]
+
+# Drop missing values across selected columns
+clean_df = df[feature_cols + [target_col]].dropna()
+
+X = clean_df[feature_cols]
+y = clean_df[target_col]
+
+# -------------------------------------------------------------------
+# 2. Train / Test Split & Feature Scaling
+# -------------------------------------------------------------------
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+
+# Feature scaling (Critical for KNN & Neural Networks)
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train)
+X_test_scaled = scaler.transform(X_test)
+
+# -------------------------------------------------------------------
+# 3. Model Initialization & Training
+# -------------------------------------------------------------------
+models = {
+    "Linear Regression": LinearRegression(),
+    "k-NN Regressor (n_neighbors=5)": KNeighborsRegressor(n_neighbors=5),
+    "MLP Regressor (Neural Net)": MLPRegressor(
+        hidden_layer_sizes=(64, 32), 
+        activation='relu', 
+        max_iter=500, 
+        random_state=42
+    )
+}
+
+# -------------------------------------------------------------------
+# 4. Evaluation Loop
+# -------------------------------------------------------------------
+results = []
+
+for name, model in models.items():
+    # Linear Regression doesn't strictly require scaling, but using scaled inputs handles it cleanly
+    if name == "Linear Regression":
+        model.fit(X_train, y_train)
+        y_pred = model.predict(X_test)
+    else:
+        model.fit(X_train_scaled, y_train)
+        y_pred = model.predict(X_test_scaled)
+    
+    # Calculate metrics
+    rmse = np.sqrt(mean_squared_error(y_test, y_pred))
+    mae = mean_absolute_error(y_test, y_pred)
+    r2 = r2_score(y_test, y_pred)
+    
+    results.append({
+        "Model": name,
+        "RMSE": round(rmse, 4),
+        "MAE": round(mae, 4),
+        "R² Score": round(r2, 4)
+    })
+
+# -------------------------------------------------------------------
+# 5. Display Comparison Table & Visualizations
+# -------------------------------------------------------------------
+results_df = pd.DataFrame(results)
+print("=== Model Comparison Performance ===")
+display(results_df)
+
+# Plot Actual vs Predicted for each model
+fig, axes = plt.subplots(1, 3, figsize=(18, 5))
+
+for ax, (name, model) in zip(axes, models.items()):
+    if name == "Linear Regression":
+        y_pred = model.predict(X_test)
+    else:
+        y_pred = model.predict(X_test_scaled)
+        
+    ax.scatter(y_test, y_pred, alpha=0.3, color='teal')
+    ax.plot([y_test.min(), y_test.max()], [y_test.min(), y_test.max()], 'r--', lw=2)
+    ax.set_title(name)
+    ax.set_xlabel("Actual DO")
+    ax.set_ylabel("Predicted DO")
+
+plt.tight_layout()
+plt.show()
+Key Highlights
+Linear Regression: Captures global linear correlations between physical parameters (like temperature) and DO.
+
+k-NN Regressor: Non-linear instance-based model; effectively groups observations with similar chemical profiles.
+
+MLP Regressor: Multi-layer feedforward neural network ((64, 32) hidden architecture with ReLU activations) that captures complex non-linear feature interactions without manually engineering features.
+
+how do i make font bigger in my markdown cells in jupyter notebook?
+
+You can enlarge text in Jupyter Notebook Markdown cells using either standard Markdown headers or HTML tags.
+
+Method 1: Use HTML Tags (Best for custom sizing)
+Use an inline HTML <span> tag with style="font-size: ..." for exact control over size:
+
+HTML
+<span style="font-size:24px;">This is custom 24px text</span>
+<span style="font-size:150%;">This text is 150% larger</span>
+Alternatively, wrap your text in HTML <font> tags or header tags:
+
+HTML
+<font size="+2">This text is 2 sizes larger</font>
+<h2>This is an HTML H2 heading</h2>
+Method 2: Use Markdown Headers
+Prefix your text with # symbols to create headings. Fewer # symbols produce larger text:
+
+Markdown
+# Biggest Heading (H1)
+## Large Heading (H2)
+### Medium Heading (H3)
+#### Small Heading (H4)
+Method 3: Change Jupyter Interface Font Size (Global Fix)
+If you want all Markdown cells across your notebook to render bigger by default without editing each cell:
+
+Open Jupyter Notebook / JupyterLab.
+
+Press Ctrl + + (or Cmd + + on Mac) to zoom the browser view in.
+
+In JupyterLab, go to Settings > Theme > Increase Code/Text Font Size.
