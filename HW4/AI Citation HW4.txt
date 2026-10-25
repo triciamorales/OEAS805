@@ -1,0 +1,132 @@
+how do i fix this warning in my jupyter notebook for wiine data?
+
+To fix the FutureWarning in Seaborn, pass the hue argument alongside x and set legend=False.   
+PNG
+
+Solution
+Update line 3 of your code to assign hue='architecture' and add legend=False:
+
+Python
+sns.barplot(
+    data=results_df, 
+    x='architecture', 
+    y='test_accuracy', 
+    hue='architecture', 
+    palette='viridis', 
+    legend=False
+)
+Why this happens
+In newer versions of Seaborn (v0.13.0+), using palette without defining hue is deprecated. Assigning hue='architecture' applies the color palette across your x-axis categories, and legend=False keeps Seaborn from creating an unnecessary extra legend for the x-axis colors.   
+PNG
++ 2
+
+help me fix the error in this code
+
+To fix the FileNotFoundError, Python needs to know the correct relative or absolute file path to unknown_wine.csv.   
+PNG
++ 1
+
+How to Fix It
+Option 1: Use the absolute path
+Replace 'data/unknown_wine.csv' with the full path on your computer:   
+PNG
+
+Python
+unknown_df = pd.read_csv(r'C:\path\to\your\data\unknown_wine.csv')
+(Note the r before the quote to handle Windows backslashes properly)
+
+Option 2: Fix the relative path
+Make sure the file unknown_wine.csv actually exists inside a subfolder named data in the exact directory where your Jupyter Notebook file (.ipynb) is saved.   
+PNG
+
+You can check your current working directory by running this in a new cell:
+
+Python
+import os
+print(os.getcwd())
+If your CSV is saved directly next to your notebook (and not in a data folder), change the line to:
+
+Python
+unknown_df = pd.read_csv('unknown_wine.csv')
+I fixed that and got a new error
+
+The ValueError occurs because unknown_df contains 14 features, but your StandardScaler was trained on 13 features.   
+PNG
+
+This usually happens when unknown_df includes an extra column—like an ID column, an un-dropped index column, or the target label (such as class or quality).
+
+How to Fix It
+1. Inspect the columns of your dataset
+Run unknown_df.columns to see which 14 columns are present in unknown_df, and compare them to the columns used when fitting the scaler.
+
+2. Drop non-feature columns before scaling
+If unknown_df contains a target column or extra column (e.g., 'id' or 'class'), drop it so only the 13 training features remain:
+
+Python
+# Drop any extra column(s) not used during training
+features_df = unknown_df.drop(columns=['class'])  # Replace 'class' with the extra column name
+
+# Scale the 13 feature columns
+unknown_scaled = scaler.transform(features_df)
+If youfitted scaler using NumPy values (e.g., X_train.values), ensure features_df matches the exact same 13 columns in the exact same order.
+
+I now have a new error
+
+The NameError: name 'best_model' is not defined means Python does not recognize the variable name best_model in your current Jupyter session.   
+PNG
+
+This happens for one of two reasons:
+
+The training cell wasn't executed yet in this session (e.g., if you restarted the kernel).   
+PNG
+
+Your trained model variable has a different name (e.g., model, clf, mlp, grid_search.best_estimator_, etc.).   
+PNG
+
+How to Fix It
+Solution A: Re-run earlier cells
+If you named your variable best_model earlier in the notebook, go back to the cell where you trained/defined best_model and run it again (or click Kernel > Restart & Run All) before running this cell.   
+PNG
+
+Solution B: Use the correct variable name
+If you saved your trained model under a different name, replace best_model with your actual variable name.   
+PNG
+
+Common alternatives depending on how you trained it:
+
+If using GridSearchCV:
+
+Python
+unknown_preds = grid_search.predict(unknown_scaled)
+unknown_probs = grid_search.predict_proba(unknown_scaled)
+If named simply model or mlp:
+
+Python
+unknown_preds = model.predict(unknown_scaled)
+unknown_probs = model.predict_proba(unknown_scaled)
+How do I make text larger in the markdown cells in jupyter notebook (browser version)
+
+To make text larger in a Jupyter Notebook Markdown cell, use HTML tags or standard Markdown headers (#).
+
+Method 1: Use Markdown Headers (Recommended)
+Add one or more # symbols at the beginning of the line:
+
+Markdown
+# Very Large Text (Heading 1)
+## Large Text (Heading 2)
+### Medium-Large Text (Heading 3)
+Method 2: Use Inline HTML with CSS
+For precise control over exact font sizes, use an inline HTML <span> or <p> tag:
+
+HTML
+<span style="font-size: 24px;">This is 24px text</span>
+Or relative sizes:
+
+HTML
+<span style="font-size: 150%;">This text is 50% larger</span>
+Method 3: Use the HTML <font> Tag
+You can also use the HTML <font> tag with a size attribute (scale from 1 to 7):
+
+HTML
+<font size="5">This text is size 5</font>
+Tip: After entering any of these snippets in a Markdown cell, press Shift + Enter to render the formatted text.
